@@ -32,6 +32,8 @@ export function TeamMark({
 
 export function MatchCard({ match }: { match: MatchCardMatch }) {
   const played = match.status === "final";
+  const homeWon = played && (match.homeScore ?? 0) > (match.awayScore ?? 0);
+  const awayWon = played && (match.awayScore ?? 0) > (match.homeScore ?? 0);
   return (
     <Link href={`/matches/${match.id}`} className="match-card">
       <div className="match-card-meta">
@@ -39,22 +41,22 @@ export function MatchCard({ match }: { match: MatchCardMatch }) {
         <span>{formatMatchWhen(match.playedAt)}</span>
       </div>
       <div className="match-card-teams">
-        <div>
+        <div className={homeWon ? "is-winner" : undefined}>
           <TeamMark name={match.homeTeam.name} shortName={match.homeTeam.shortName} />
           <strong>{match.homeTeam.name}</strong>
         </div>
         <p className="scoreboard">
           {played ? (
             <>
-              <span>{match.homeScore}</span>
+              <span className={homeWon ? "is-winner" : undefined}>{match.homeScore}</span>
               <span className="score-sep">:</span>
-              <span>{match.awayScore}</span>
+              <span className={awayWon ? "is-winner" : undefined}>{match.awayScore}</span>
             </>
           ) : (
             <span className="vs">VS</span>
           )}
         </p>
-        <div>
+        <div className={awayWon ? "is-winner" : undefined}>
           <TeamMark name={match.awayTeam.name} shortName={match.awayTeam.shortName} />
           <strong>{match.awayTeam.name}</strong>
         </div>

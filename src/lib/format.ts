@@ -22,6 +22,15 @@ export function formatDate(date: Date) {
   return dateOnly.format(date);
 }
 
+export function formatBarDate(date: Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Hong_Kong",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
 export function youtubeId(url: string | null | undefined) {
   if (!url) return null;
   const watch = url.match(/[?&]v=([\w-]{11})/);

@@ -15,6 +15,8 @@ export default async function MatchPage({
   if (!match) notFound();
   const video = youtubeId(match.videoUrl);
   const played = match.status === "final";
+  const homeWon = played && (match.homeScore ?? 0) > (match.awayScore ?? 0);
+  const awayWon = played && (match.awayScore ?? 0) > (match.homeScore ?? 0);
 
   const homeLines = match.boxScores
     .filter((row) => row.teamId === match.homeTeamId)
@@ -25,43 +27,59 @@ export default async function MatchPage({
 
   return (
     <>
-      <p className="eyebrow">
-        {match.grade.name} · {formatMatchWhen(match.playedAt)} · {match.venue}
-      </p>
-      <div className="match-hero">
-        <div>
-          <TeamMark name={match.homeTeam.name} shortName={match.homeTeam.shortName} />
-          <Link href={`/teams/${match.homeTeam.id}`}>
-            <h2>{match.homeTeam.name}</h2>
-          </Link>
-        </div>
-        <p className="hero-score">
-          {played ? `${match.homeScore} : ${match.awayScore}` : "VS"}
-        </p>
-        <div>
-          <TeamMark name={match.awayTeam.name} shortName={match.awayTeam.shortName} />
-          <Link href={`/teams/${match.awayTeam.id}`}>
-            <h2>{match.awayTeam.name}</h2>
-          </Link>
+      <div className="match-stage">
+        <div className="match-stage-inner">
+          <p className="eyebrow">
+            {match.grade.name} · {formatMatchWhen(match.playedAt)} · {match.venue ?? "場地待定"}
+          </p>
+          <div className="match-hero">
+            <div className={homeWon ? "is-winner" : undefined}>
+              <TeamMark name={match.homeTeam.name} shortName={match.homeTeam.shortName} />
+              <Link href={`/teams/${match.homeTeam.id}`}>
+                <h2>{match.homeTeam.name}</h2>
+              </Link>
+            </div>
+            <p className="hero-score">
+              {played ? (
+                <>
+                  <span className={homeWon ? "is-winner" : undefined}>{match.homeScore}</span>
+                  <span className="score-sep">:</span>
+                  <span className={awayWon ? "is-winner" : undefined}>{match.awayScore}</span>
+                </>
+              ) : (
+                <span className="vs">VS</span>
+              )}
+            </p>
+            <div className={awayWon ? "is-winner" : undefined}>
+              <TeamMark name={match.awayTeam.name} shortName={match.awayTeam.shortName} />
+              <Link href={`/teams/${match.awayTeam.id}`}>
+                <h2>{match.awayTeam.name}</h2>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
 
-      {video ? (
-        <iframe
-          title="比賽影片"
-          src={`https://www.youtube.com/embed/${video}`}
-          style={{ width: "100%", aspectRatio: "16/9", border: 0, marginBottom: "1.5rem" }}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      ) : match.videoUrl ? (
-        <p className="muted" style={{ marginBottom: "1.5rem" }}>
-          影片頻道：
-          <a href={match.videoUrl} rel="noreferrer">
-            {match.videoUrl}
+      <section className="video-panel">
+        <SectionHeading en="Game Video" zh="比賽影片" />
+        {video ? (
+          <iframe
+            title="比賽影片"
+            src={`https://www.youtube.com/embed/${video}`}
+            className="video-frame"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : match.videoUrl ? (
+          <a className="video-slot" href={match.videoUrl} rel="noreferrer">
+            開啟比賽影片
           </a>
-        </p>
-      ) : null}
+        ) : (
+          <div className="video-slot">
+            尚未加入影片。可在賽事資料填入 YouTube 連結後顯示在此。
+          </div>
+        )}
+      </section>
 
       {[
         { team: match.homeTeam, lines: homeLines },

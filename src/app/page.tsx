@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { MatchBar } from "@/components/match-bar";
 import { MatchCard, TeamMark } from "@/components/match-card";
 import { SectionHeading, SectionTabs } from "@/components/chrome";
 import { pctLabel } from "@/lib/format";
@@ -16,14 +16,15 @@ function gamesBehind(leaderW: number, leaderL: number, w: number, l: number) {
 }
 
 export default async function HomePage() {
-  const [matches, news, grades, standingGroups, leaderCategories] =
+  const [latest, news, grades, standingGroups, leaderCategories] =
     await Promise.all([
-      getLatestMatches(6),
+      getLatestMatches(18),
       getNews(),
       getGrades(),
       getStandingsByGrade(),
       getLeagueLeaders(),
     ]);
+  const matches = latest.slice(0, 6);
 
   const featuredStandings = [...standingGroups].sort(
     (a, b) =>
@@ -35,32 +36,35 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="hero">
-        <div className="hero-copy-block">
-          <p className="hero-kicker eyebrow">Phoenix Basketball League</p>
-          <h1>
-            鳳凰
-            <span>聯賽</span>
-          </h1>
-          <p className="hero-copy">
-            香港業餘籃球聯賽。組別、球隊、賽程與戰績公開查閱，結構參考職業聯盟官網的資訊層級。
-          </p>
+      <div className="dashboard-head">
+        <div className="dashboard-head-inner">
+          <section className="hero">
+            <div className="hero-copy-block">
+              <p className="hero-kicker eyebrow">Phoenix Basketball League</p>
+              <h1>
+                鳳凰
+                <span>聯賽</span>
+              </h1>
+              <p className="hero-copy">
+                香港業餘籃球聯賽。組別、球隊、賽程與戰績公開查閱。
+              </p>
+            </div>
+          </section>
         </div>
-        <figure className="hero-featured">
-          <Image
-            src="/featured/cai-guoting.png"
-            alt="蔡國庭封蓋瞬間"
-            width={720}
-            height={960}
-            priority
-          />
-          <figcaption>
-            <p className="eyebrow">Featured Player</p>
-            <p className="featured-title">封波之鬼</p>
-            <p className="featured-name">蔡國庭</p>
-          </figcaption>
-        </figure>
-      </section>
+        <MatchBar
+          matches={latest.map((match) => ({
+            id: match.id,
+            playedAt: match.playedAt.toISOString(),
+            venue: match.venue,
+            homeScore: match.homeScore,
+            awayScore: match.awayScore,
+            status: match.status,
+            homeName: match.homeTeam.name,
+            awayName: match.awayTeam.name,
+            gradeName: match.grade.name,
+          }))}
+        />
+      </div>
 
       {featuredStandings ? (
         <section>
