@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Season {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  isCurrent Boolean      @default(false)
+  sourceId  String?      @unique
+  grades    Grade[]
+  matches   Match[]
+  news      NewsPost[]
+  rosters   RosterSpot[]
+}
+
+model Grade {
+  id        String      @id @default(cuid())
+  name      String
+  sortOrder Int         @default(0)
+  sourceId  String?     @unique
+  seasonId  String
+  season    Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  teams     TeamGrade[]
+  matches   Match[]
+}
+
+model Team {
+  id          String       @id @default(cuid())
+  name        String
+  shortName   String?
+  logoUrl     String?
+  sourceId    String?      @unique
+  grades      TeamGrade[]
+  homeMatches Match[]      @relation("HomeTeam")
+  awayMatches Match[]      @relation("AwayTeam")
+  rosters     RosterSpot[]
+}
+
+model TeamGrade {
+  teamId  String
+  gradeId String
+  team    Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  grade   Grade  @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, gradeId])
+}
+
+model Player {
+  id       String       @id @default(cuid())
+  name     String
+  photoUrl String?
+  heightCm Int?
+  weightKg Int?
+  position String?
+  bio      String?
+  sourceId String?      @unique
+  rosters  RosterSpot[]
+  boxScores BoxScore[]
+}
+
+model RosterSpot {
+  playerId String
+  teamId   String
+  seasonId String
+  number   String?
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  team     Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  season   Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@id([playerId, teamId, seasonId])
+}
+
+model Match {
+  id         String     @id @default(cuid())
+  seasonId   String
+  gradeId    String
+  homeTeamId String
+  awayTeamId String
+  playedAt   DateTime
+  venue      String?
+  homeScore  Int?
+  awayScore  Int?
+  status     String     @default("scheduled")
+  videoUrl   String?
+  sourceId   String?    @unique
+  season     Season     @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  grade      Grade      @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  homeTeam   Team       @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam   Team       @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  boxScores  BoxScore[]
+  news       NewsPost[]
+}
+
+model BoxScore {
+  id       String @id @default(cuid())
+  matchId  String
+  playerId String
+  teamId   String
+  fgm      Int    @default(0)
+  fga      Int    @default(0)
+  tpm      Int    @default(0)
+  tpa      Int    @default(0)
+  ftm      Int    @default(0)
+  fta      Int    @default(0)
+  oreb     Int    @default(0)
+  dreb     Int    @default(0)
+  reb      Int    @default(0)
+  ast      Int    @default(0)
+  stl      Int    @default(0)
+  pf       Int    @default(0)
+  to       Int    @default(0)
+  blk      Int    @default(0)
+  pts      Int    @default(0)
+  match    Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, playerId])
+}
+
+model NewsPost {
+  id          String   @id @default(cuid())
+  title       String
+  excerpt     String?
+  body        String
+  imageUrl    String?
+  publishedAt DateTime
+  seasonId    String?
+  matchId     String?
+  sourceId    String?  @unique
+  season      Season?  @relation(fields: [seasonId], references: [id])
+  match       Match?   @relation(fields: [matchId], references: [id])
+}
+
+model PageContent {
+  slug  String @id
+  title String
+  body  String
+}
